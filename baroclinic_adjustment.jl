@@ -1,6 +1,5 @@
 using Oceananigans
 using Oceananigans.Units
-using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid, GridFittedBottom
 using Oceananigans.TurbulenceClosures: VerticallyImplicit, Vertical, Horizontal
 using Printf
 using GLMakie
@@ -17,6 +16,8 @@ const Lz = grid.Lz
 
 # Uncomment to put a bump in the grid:
 #=
+using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid, GridFittedBottom
+
 const width = 50kilometers
 bump(x, y) = - Lz * (1 - 0.5 * exp(-x^2 / 2width^2))
 grid = ImmersedBoundaryGrid(grid, GridFittedBottom(bump))
@@ -49,7 +50,6 @@ M² = 8e-8 # [s⁻²] horizontal buoyancy gradient
 
 δy = 50kilometers
 δz = 100
-Lz = grid.Lz
 
 δc = 2δy
 δb = δy * M²
@@ -112,19 +112,19 @@ axc = Axis(fig[1, 3])
 slider = Slider(fig[2, :], range=1:Nt, startvalue=1)
 n = slider.value
 
-xζ, yζ, zζ = 1e3 .* nodes((Face, Face, Center), grid)
-xc, yc, zc = 1e3 .* nodes((Center, Center, Center), grid)
+xζ, yζ, zζ = 1e-3 .* nodes((Face, Face, Center), grid) # convert m -> km
+xc, yc, zc = 1e-3 .* nodes((Center, Center, Center), grid) # convert m -> km
 
 ζⁿ = @lift ζ[$n]
 bⁿ = @lift b[$n]
 cⁿ = @lift c[$n]
 
-hmζ = heatmap!(axζ, xζ, yζ, ζⁿ)
-hmb = heatmap!(axb, xc, yc, bⁿ)
-hmc = heatmap!(axc, xc, yc, cⁿ)
+hmζ = heatmap!(axζ, xζ, yζ, ζⁿ, colormap=:curl, colorrange = (-2e-4, 2e-4))
+hmb = heatmap!(axb, xc, yc, bⁿ, colormap=:thermal)
+hmc = heatmap!(axc, xc, yc, cⁿ, colormap=:deep)
 
-# Colorbar(fig[2, 1], xζ, yζ, hmζ, horizontal=true)
-# Colorbar(fig[2, 2], xc, yc, hmb, horizontal=true)
-# Colorbar(fig[2, 3], xc, yc, hmc, horizontal=true)
+# Colorbar(fig[2, 1], hmζ, horizontal=true)
+# Colorbar(fig[2, 2], hmb, horizontal=true)
+# Colorbar(fig[2, 3], hmc, horizontal=true)
 
 display(fig)
